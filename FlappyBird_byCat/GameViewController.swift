@@ -5,6 +5,8 @@
 //  Created by cafeyqian on 2019/2/27.
 //  Copyright © 2019 cafeyqian. All rights reserved.
 //
+//代码参照：https://www.raywenderlich.com/71-spritekit-tutorial-for-beginners
+
 
 import UIKit
 import SpriteKit
