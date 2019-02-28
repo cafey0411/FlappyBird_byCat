@@ -9,6 +9,8 @@
 import SpriteKit
 import GameplayKit
 
+var monstersDestroyed = 0
+
 struct PhysicsCategory {
     static let none      : UInt32 = 0
     static let all       : UInt32 = UInt32.max
@@ -114,7 +116,16 @@ class GameScene: SKScene {
         let actionMove = SKAction.move(to: CGPoint(x: -monster.size.width/2, y: actualY),
                                        duration: TimeInterval(actualDuration))
         let actionMoveDone = SKAction.removeFromParent()
-        monster.run(SKAction.sequence([actionMove, actionMoveDone]))
+    
+        //游戏结束时的动作
+        let loseAction = SKAction.run() { [weak self] in
+            guard let `self` = self else { return }
+            //场景切换动作
+            let reveal = SKTransition.flipHorizontal(withDuration: 0.5)
+            let gameOverScene = GameOverScene(size: self.size, won: false)
+            self.view?.presentScene(gameOverScene, transition: reveal)
+        }
+        monster.run(SKAction.sequence([actionMove, loseAction, actionMoveDone]))
     }
     
     
@@ -124,6 +135,8 @@ class GameScene: SKScene {
         guard let touch = touches.first else {
             return
         }
+        
+        //发射效果音乐
         run(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
         
         let touchLocation = touch.location(in: self)
@@ -167,6 +180,13 @@ class GameScene: SKScene {
     
     //击中时
     func projectileDidCollideWithMonster(projectile: SKSpriteNode, monster: SKSpriteNode) {
+        monstersDestroyed += 1
+        if monstersDestroyed > 5 {
+            let reveal = SKTransition.flipHorizontal(withDuration: 0.5)
+            let gameOverScene = GameOverScene(size: self.size, won: true)
+            view?.presentScene(gameOverScene, transition: reveal)
+        }
+        
         print("Hit")
         projectile.removeFromParent()
         monster.removeFromParent()
