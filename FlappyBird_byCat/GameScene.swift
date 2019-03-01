@@ -50,8 +50,6 @@ extension CGPoint {
     }
 }
 
-
-
 //Scenes：场景，游戏中的内容会被组织成场景，由SKScene对象表示。包含了精灵和其它需要渲染的内容。一个游戏，可能需要创建一个或多个SKScene类或其子类。
 class GameScene: SKScene {
     // 1
@@ -59,6 +57,7 @@ class GameScene: SKScene {
     var monstersDestroyed = 0
     let scoreLabel = SKLabelNode(text: "SCORE:0")
     var startBtn: UIButton!
+    
     //每当场景要被呈现时，会调用该方法，并且只在第一次调用
     override func didMove(to view: SKView) {
         //创建游戏开始按钮
@@ -81,20 +80,19 @@ class GameScene: SKScene {
     }
     
      func startGame() {
+        //增加分数label
         scoreLabel.position = CGPoint(x: size.width * 0.5, y: size.height - 50)
         scoreLabel.color = SKColor.red
-        scoreLabel.fontColor = SKColor.blue
+        scoreLabel.fontColor = SKColor.black
+        scoreLabel.fontSize = 18
         scoreLabel.zPosition = 100
         addChild(scoreLabel)
         
         // 2
-        backgroundColor = SKColor.white
-        // 3
+        backgroundColor = SKColor.lightGray
         player.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
-        // 4
         addChild(player)
         
-        //physicsWorld.gravity = .zero
         physicsWorld.gravity = CGVector(dx: 0.0, dy: 0.0)
         physicsWorld.contactDelegate = self
         
@@ -158,7 +156,6 @@ class GameScene: SKScene {
         }
         monster.run(SKAction.sequence([actionMove, loseAction, actionMoveDone]))
     }
-    
     
     //点击画面时：创建飞镖，并发射 ：重写默认方法
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
