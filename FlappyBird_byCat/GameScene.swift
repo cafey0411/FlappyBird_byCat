@@ -9,8 +9,6 @@
 import SpriteKit
 import GameplayKit
 
-var monstersDestroyed = 0
-
 struct PhysicsCategory {
     static let none      : UInt32 = 0
     static let all       : UInt32 = UInt32.max
@@ -49,26 +47,41 @@ extension CGPoint {
         return self / length()
     }
 }
+
+//Scenes：场景，游戏中的内容会被组织成场景，由SKScene对象表示。包含了精灵和其它需要渲染的内容。一个游戏，可能需要创建一个或多个SKScene类或其子类。
 class GameScene: SKScene {
     // 1
     let player = SKSpriteNode(imageNamed: "player")
+    var monstersDestroyed = 0
+    let scoreLabel = SKLabelNode(text: "SCORE:0")
     
+    //每当场景要被呈现时，会调用该方法，并且只在第一次调用
     override func didMove(to view: SKView) {
+    }
+    
+     func startGame() {
+        scoreLabel.position = CGPoint(x: size.width * 0.5, y: size.height - 50)
+        scoreLabel.color = SKColor.red
+         scoreLabel.fontColor = SKColor.blue
+        scoreLabel.zPosition = 100
+        addChild(scoreLabel)
+        
         // 2
         backgroundColor = SKColor.white
         // 3
         player.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
-        physicsWorld.gravity = .zero
-        physicsWorld.contactDelegate = self
-        
         // 4
         addChild(player)
+        
+        //physicsWorld.gravity = .zero
+        physicsWorld.gravity = CGVector(dx: 0.0, dy: 0.0)
+        physicsWorld.contactDelegate = self
         
         //重复增加移动的怪物
         run(SKAction.repeatForever(
             SKAction.sequence([
                 SKAction.run(addMonster),
-                SKAction.wait(forDuration: 1.0)
+                SKAction.wait(forDuration: 2.0) //每隔2秒执行一次
                 ])
         ))
         
@@ -86,10 +99,8 @@ class GameScene: SKScene {
         return random() * (max - min) + min
     }
     
-    
     //创建怪物，并移动
     func addMonster() {
-        
         // Create sprite
         let monster = SKSpriteNode(imageNamed: "monster")
         
@@ -99,7 +110,6 @@ class GameScene: SKScene {
         // Position the monster slightly off-screen along the right edge,
         // and along a random position along the Y axis as calculated above
         monster.position = CGPoint(x: size.width + monster.size.width/2, y: actualY)
-        
         monster.physicsBody = SKPhysicsBody(rectangleOf: monster.size) // 1
         monster.physicsBody?.isDynamic = true // 2
         monster.physicsBody?.categoryBitMask = PhysicsCategory.monster // 3
@@ -110,7 +120,7 @@ class GameScene: SKScene {
         addChild(monster)
         
         // Determine speed of the monster
-        let actualDuration = random(min: CGFloat(2.0), max: CGFloat(4.0))
+        let actualDuration = random(min: CGFloat(3.0), max: CGFloat(5.0))
         
         // Create the actions
         let actionMove = SKAction.move(to: CGPoint(x: -monster.size.width/2, y: actualY),
@@ -129,7 +139,7 @@ class GameScene: SKScene {
     }
     
     
-    //点击画面时：创建飞镖，并发射
+    //点击画面时：创建飞镖，并发射 ：重写默认方法
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         // 1 - Choose one of the touches to work with
         guard let touch = touches.first else {
@@ -146,13 +156,16 @@ class GameScene: SKScene {
         let projectile = SKSpriteNode(imageNamed: "projectile")
         projectile.position = player.position
         
+        //物理引擎:碰撞定义
+        projectile.physicsBody?.affectedByGravity = true
         projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width/2)
-        projectile.physicsBody?.isDynamic = true
+        //定义了这个物体所属分类
         projectile.physicsBody?.categoryBitMask = PhysicsCategory.projectile
+        //定义了哪种物体接触到该物体，该物体会收到通知（谁撞我我会收到通知）
         projectile.physicsBody?.contactTestBitMask = PhysicsCategory.monster
+        //定义了哪种物体会碰撞到自己
         projectile.physicsBody?.collisionBitMask = PhysicsCategory.none
         projectile.physicsBody?.usesPreciseCollisionDetection = true
-        
         
         // 3 - Determine offset of location to projectile
         let offset = touchLocation - projectile.position
@@ -180,7 +193,9 @@ class GameScene: SKScene {
     
     //击中时
     func projectileDidCollideWithMonster(projectile: SKSpriteNode, monster: SKSpriteNode) {
+        //计数，胜利
         monstersDestroyed += 1
+        scoreLabel.text = "SCORE:\(monstersDestroyed)"
         if monstersDestroyed > 5 {
             let reveal = SKTransition.flipHorizontal(withDuration: 0.5)
             let gameOverScene = GameOverScene(size: self.size, won: true)
@@ -188,11 +203,14 @@ class GameScene: SKScene {
         }
         
         print("Hit")
+        //移除击中的
         projectile.removeFromParent()
         monster.removeFromParent()
     }
 }
 
+
+//添加场景代理
 extension GameScene: SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
         // 1
