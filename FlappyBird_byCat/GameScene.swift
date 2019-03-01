@@ -8,7 +8,9 @@
 
 import SpriteKit
 import GameplayKit
-
+fileprivate extension Selector {
+    static let startBtnClick = #selector(GameScene.startBtnEvent(sender:))
+}
 struct PhysicsCategory {
     static let none      : UInt32 = 0
     static let all       : UInt32 = UInt32.max
@@ -48,21 +50,40 @@ extension CGPoint {
     }
 }
 
+
+
 //Scenes：场景，游戏中的内容会被组织成场景，由SKScene对象表示。包含了精灵和其它需要渲染的内容。一个游戏，可能需要创建一个或多个SKScene类或其子类。
 class GameScene: SKScene {
     // 1
     let player = SKSpriteNode(imageNamed: "player")
     var monstersDestroyed = 0
     let scoreLabel = SKLabelNode(text: "SCORE:0")
-    
+    var startBtn: UIButton!
     //每当场景要被呈现时，会调用该方法，并且只在第一次调用
     override func didMove(to view: SKView) {
+        //创建游戏开始按钮
+        startBtn = UIButton(type: .custom)
+        startBtn.setTitle("start", for: .normal)
+        startBtn.setTitleColor(.green, for: .normal)
+        startBtn.titleLabel?.font = UIFont(name: "Chalkduster", size: 17)
+        startBtn.frame = CGRect(x: (view.bounds.size.width - 80) * 0.5, y: 200, width: 80, height: 40)
+        startBtn.layer.borderWidth = 1
+        startBtn.layer.borderColor = UIColor.orange.cgColor
+        startBtn.layer.cornerRadius = 2
+        startBtn.layer.masksToBounds = true
+        view.addSubview(startBtn)
+        startBtn.addTarget(self, action: .startBtnClick, for: .touchUpInside)
+    }
+    
+    @objc func startBtnEvent(sender: UIButton) {
+        startGame()
+        startBtn.removeFromSuperview()
     }
     
      func startGame() {
         scoreLabel.position = CGPoint(x: size.width * 0.5, y: size.height - 50)
         scoreLabel.color = SKColor.red
-         scoreLabel.fontColor = SKColor.blue
+        scoreLabel.fontColor = SKColor.blue
         scoreLabel.zPosition = 100
         addChild(scoreLabel)
         
