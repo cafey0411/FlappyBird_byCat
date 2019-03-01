@@ -11,6 +11,9 @@ import GameplayKit
 fileprivate extension Selector {
     static let startBtnClick = #selector(GameScene.startBtnEvent(sender:))
 }
+
+
+
 struct PhysicsCategory {
     static let none      : UInt32 = 0
     static let all       : UInt32 = UInt32.max
@@ -53,10 +56,14 @@ extension CGPoint {
 //Scenes：场景，游戏中的内容会被组织成场景，由SKScene对象表示。包含了精灵和其它需要渲染的内容。一个游戏，可能需要创建一个或多个SKScene类或其子类。
 class GameScene: SKScene {
     // 1
-    let player = SKSpriteNode(imageNamed: "player")
+    //let player = SKSpriteNode(imageNamed: "player")
+    
     var monstersDestroyed = 0
     let scoreLabel = SKLabelNode(text: "SCORE:0")
     var startBtn: UIButton!
+    
+    var playerTextures: [SKTexture]!
+    var player: SKSpriteNode!
     
     //每当场景要被呈现时，会调用该方法，并且只在第一次调用
     override func didMove(to view: SKView) {
@@ -75,11 +82,15 @@ class GameScene: SKScene {
     }
     
     @objc func startBtnEvent(sender: UIButton) {
+        //背景颜色
+        backgroundColor = SKColor(red: 80.0/255, green: 192.0/255, blue: 203.0/255, alpha: 0.3)
+        
         startGame()
         startBtn.removeFromSuperview()
     }
     
      func startGame() {
+        
         //增加分数label
         scoreLabel.position = CGPoint(x: size.width * 0.5, y: size.height - 50)
         scoreLabel.color = SKColor.red
@@ -88,12 +99,18 @@ class GameScene: SKScene {
         scoreLabel.zPosition = 100
         addChild(scoreLabel)
         
-        // 2
-        backgroundColor = SKColor.lightGray
+        //主角为gif
+        playerTextures = loadTextures(imagePath: Bundle.main.path(forResource: "player", ofType: "gif")!)
+        player = SKSpriteNode(texture: playerTextures[0])
         player.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
         addChild(player)
         
         physicsWorld.gravity = CGVector(dx: 0.0, dy: 0.0)
+        
+        /*
+         SKPhysicsWorld，这个类基于场景，只能被修改但是不能被创建，这个类负责提供重力和检查碰撞
+         设置物理世界的碰撞检测代理为场景自己，这样如果这个物理世界里面有两个可以碰撞接触的物理体碰到一起了就会通知他的代理
+         */
         physicsWorld.contactDelegate = self
         
         //重复增加移动的怪物
@@ -108,6 +125,8 @@ class GameScene: SKScene {
         let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
         backgroundMusic.autoplayLooped = true
         addChild(backgroundMusic)
+        
+        birdStartFly()
     }
     
     func random() -> CGFloat {
@@ -224,6 +243,9 @@ class GameScene: SKScene {
         //移除击中的
         projectile.removeFromParent()
         monster.removeFromParent()
+        
+        //发送通知
+        NotificationCenter.default.post(name: NSNotification.Name.init("GameSceneNotification"), object: monstersDestroyed)
     }
 }
 
@@ -251,5 +273,30 @@ extension GameScene: SKPhysicsContactDelegate {
                 projectileDidCollideWithMonster(projectile: projectile, monster: monster)
             }
         }
+    }
+    
+    //因为无法直接将gif动画在SpriteKit中播放，所以我们必须将gif中的一系列静态图片抽取出来然后形成一个动画帧
+    func loadTextures(imagePath: String) -> [SKTexture]?{
+        
+        guard let imageSource = CGImageSourceCreateWithURL(URL(fileURLWithPath: imagePath) as CFURL, nil) else {
+            return nil
+        }
+        
+        let count = CGImageSourceGetCount(imageSource)
+        var images:[CGImage] = []
+        
+        for i in 0..<count{
+            guard let img = CGImageSourceCreateImageAtIndex(imageSource, i, nil) else {continue}
+            
+            images.append(img)
+        }
+        
+        return images.map {SKTexture(cgImage:$0)}
+    }
+    
+    //增加角色的运动效果
+    func birdStartFly() {
+        let flyAction = SKAction.animate(with: playerTextures, timePerFrame: 0.12)
+        player.run(SKAction.repeatForever(flyAction), withKey: "fly")
     }
 }

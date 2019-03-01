@@ -28,6 +28,9 @@ class GameViewController: UIViewController {
         skView.ignoresSiblingOrder = true
         scene.scaleMode = .resizeFill
         skView.presentScene(scene)
+        
+        //增加通知器：接收通知
+        NotificationCenter.default.addObserver(self, selector: #selector(notifyFunc(noti:)), name: NSNotification.Name("GameSceneNotification"), object: nil)
     }
 
     override var shouldAutorotate: Bool {
@@ -44,5 +47,11 @@ class GameViewController: UIViewController {
 
     override var prefersStatusBarHidden: Bool {
         return true
+    }
+    
+    @objc func notifyFunc(noti: Notification) {
+        let newStatus = noti.object as? Int
+        print("count:\(newStatus)")
+    
     }
 }

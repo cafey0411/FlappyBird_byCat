@@ -18,6 +18,7 @@
 		BA02892822278BCC005E796C /* GameOverScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA02892722278BCC005E796C /* GameOverScene.swift */; };
 		BA02892C22278E46005E796C /* background-music-aac.caf in Resources */ = {isa = PBXBuildFile; fileRef = BA02892A22278E46005E796C /* background-music-aac.caf */; };
 		BA02892D22278E46005E796C /* pew-pew-lei.caf in Resources */ = {isa = PBXBuildFile; fileRef = BA02892B22278E46005E796C /* pew-pew-lei.caf */; };
+		BA02893E22292338005E796C /* player.gif in Resources */ = {isa = PBXBuildFile; fileRef = BA02893D22292338005E796C /* player.gif */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +56,7 @@
 		BA02892722278BCC005E796C /* GameOverScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverScene.swift; sourceTree = "<group>"; };
 		BA02892A22278E46005E796C /* background-music-aac.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "background-music-aac.caf"; sourceTree = "<group>"; };
 		BA02892B22278E46005E796C /* pew-pew-lei.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "pew-pew-lei.caf"; sourceTree = "<group>"; };
+		BA02893D22292338005E796C /* player.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = player.gif; path = FlappyBird_byCat/Resources/player.gif; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +107,7 @@
 		BA0288AE22262E19005E796C /* FlappyBird_byCat */ = {
 			isa = PBXGroup;
 			children = (
+				BA02893C22292321005E796C /* Resources */,
 				BA02892922278E04005E796C /* Sounds */,
 				BA0288AF22262E19005E796C /* AppDelegate.swift */,
 				BA0288B522262E19005E796C /* GameScene.swift */,
@@ -143,6 +146,14 @@
 				BA02892B22278E46005E796C /* pew-pew-lei.caf */,
 			);
 			path = Sounds;
+			sourceTree = "<group>";
+		};
+		BA02893C22292321005E796C /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BA02893D22292338005E796C /* player.gif */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -250,6 +261,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BA02892C22278E46005E796C /* background-music-aac.caf in Resources */,
+				BA02893E22292338005E796C /* player.gif in Resources */,
 				BA0288BB22262E19005E796C /* Main.storyboard in Resources */,
 				BA0288BD22262E1A005E796C /* Assets.xcassets in Resources */,
 				BA02892D22278E46005E796C /* pew-pew-lei.caf in Resources */,
