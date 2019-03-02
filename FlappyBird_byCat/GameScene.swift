@@ -8,11 +8,6 @@
 
 import SpriteKit
 import GameplayKit
-fileprivate extension Selector {
-    static let startBtnClick = #selector(GameScene.startBtnEvent(sender:))
-}
-
-
 
 struct PhysicsCategory {
     static let none      : UInt32 = 0
@@ -60,36 +55,26 @@ class GameScene: SKScene {
     
     var monstersDestroyed = 0
     let scoreLabel = SKLabelNode(text: "SCORE:0")
-    var startBtn: UIButton!
     
     var playerTextures: [SKTexture]!
     var player: SKSpriteNode!
     
+    var gameStatus = GameStatus.idle {
+        didSet {
+            NotificationCenter.default.post(name: NSNotification.Name.init("GameSceneNotification"), object: gameStatus)
+        }
+    }
+    
     //每当场景要被呈现时，会调用该方法，并且只在第一次调用
     override func didMove(to view: SKView) {
-        //创建游戏开始按钮
-        startBtn = UIButton(type: .custom)
-        startBtn.setTitle("start", for: .normal)
-        startBtn.setTitleColor(.green, for: .normal)
-        startBtn.titleLabel?.font = UIFont(name: "Chalkduster", size: 17)
-        startBtn.frame = CGRect(x: (view.bounds.size.width - 80) * 0.5, y: 200, width: 80, height: 40)
-        startBtn.layer.borderWidth = 1
-        startBtn.layer.borderColor = UIColor.orange.cgColor
-        startBtn.layer.cornerRadius = 2
-        startBtn.layer.masksToBounds = true
-        view.addSubview(startBtn)
-        startBtn.addTarget(self, action: .startBtnClick, for: .touchUpInside)
-    }
-    
-    @objc func startBtnEvent(sender: UIButton) {
         //背景颜色
         backgroundColor = SKColor(red: 80.0/255, green: 192.0/255, blue: 203.0/255, alpha: 0.3)
-        
-        startGame()
-        startBtn.removeFromSuperview()
     }
     
+ 
      func startGame() {
+        
+         gameStatus = GameStatus.running
         
         //增加分数label
         scoreLabel.position = CGPoint(x: size.width * 0.5, y: size.height - 50)
@@ -170,7 +155,8 @@ class GameScene: SKScene {
             guard let `self` = self else { return }
             //场景切换动作
             let reveal = SKTransition.flipHorizontal(withDuration: 0.5)
-            let gameOverScene = GameOverScene(size: self.size, won: false)
+            self.gameStatus = GameStatus.over
+            let gameOverScene = GameOverScene(size: self.size, won: false, status: self.gameStatus)
             self.view?.presentScene(gameOverScene, transition: reveal)
         }
         monster.run(SKAction.sequence([actionMove, loseAction, actionMoveDone]))
@@ -178,6 +164,10 @@ class GameScene: SKScene {
     
     //点击画面时：创建飞镖，并发射 ：重写默认方法
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if gameStatus != GameStatus.running {
+            return
+        }
+        
         // 1 - Choose one of the touches to work with
         guard let touch = touches.first else {
             return
@@ -188,7 +178,6 @@ class GameScene: SKScene {
         
         let touchLocation = touch.location(in: self)
     
-        
         // 2 - Set up initial location of projectile
         let projectile = SKSpriteNode(imageNamed: "projectile")
         projectile.position = player.position
@@ -234,8 +223,9 @@ class GameScene: SKScene {
         monstersDestroyed += 1
         scoreLabel.text = "SCORE:\(monstersDestroyed)"
         if monstersDestroyed > 5 {
+            gameStatus = GameStatus.over
             let reveal = SKTransition.flipHorizontal(withDuration: 0.5)
-            let gameOverScene = GameOverScene(size: self.size, won: true)
+            let gameOverScene = GameOverScene(size: self.size, won: true, status: self.gameStatus)
             view?.presentScene(gameOverScene, transition: reveal)
         }
         
@@ -243,9 +233,6 @@ class GameScene: SKScene {
         //移除击中的
         projectile.removeFromParent()
         monster.removeFromParent()
-        
-        //发送通知
-        NotificationCenter.default.post(name: NSNotification.Name.init("GameSceneNotification"), object: monstersDestroyed)
     }
 }
 

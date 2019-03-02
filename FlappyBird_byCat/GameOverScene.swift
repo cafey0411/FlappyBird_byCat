@@ -8,7 +8,6 @@
 
 import SpriteKit
 
-
 enum GameStatus {
     case idle
     case running
@@ -16,7 +15,7 @@ enum GameStatus {
 }
 
 class GameOverScene: SKScene {
-    init(size: CGSize, won:Bool) {
+    init(size: CGSize, won:Bool, status:GameStatus) {
         super.init(size: size)
         
         // 1
@@ -33,6 +32,9 @@ class GameOverScene: SKScene {
         label.position = CGPoint(x: size.width/2, y: size.height/2)
         addChild(label)
         
+        //发送通知
+        NotificationCenter.default.post(name: NSNotification.Name.init("GameSceneNotification"), object: status)
+        
         // 4
         run(SKAction.sequence([
             SKAction.wait(forDuration: 3.0),
@@ -42,6 +44,7 @@ class GameOverScene: SKScene {
                 let reveal = SKTransition.flipHorizontal(withDuration: 0.5)
                 let scene = GameScene(size: size)
                 self.view?.presentScene(scene, transition:reveal)
+              
             }
             ]))
     }
