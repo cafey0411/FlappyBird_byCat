@@ -55,8 +55,25 @@ class GameScene: SKScene {
         //失败条件
         static let LOSE  : Int = 3
         //胜利条件
-        static let WIN   : Int = 6
+        static let WIN   : Int = 30
     }
+    
+    //怪物参数u初始化
+    //出现频率
+    var monsterAddFrequency : Double = 2 {
+        didSet {
+            print("restart :monsterAddFrequency:\(monsterAddFrequency)")
+            removeAction(forKey: "addMonster")
+            run(SKAction.repeatForever(
+                SKAction.sequence([
+                    SKAction.run(addMonster),
+                    SKAction.wait(forDuration: TimeInterval(monsterAddFrequency)) //每隔n秒执行一次
+                    ])
+            ), withKey: "addMonster")
+        }
+    }
+    //从右到左移动所需时间
+    var monsterMoveSpeed : Double = 5
 
     // 1
     //let player = SKSpriteNode(imageNamed: "player")
@@ -81,7 +98,6 @@ class GameScene: SKScene {
         backgroundColor = SKColor(red: 80.0/255, green: 192.0/255, blue: 203.0/255, alpha: 0.3)
     }
     
- 
      func startGame() {
         //存储数据
         let score = UserDefaults.standard.integer(forKey: "score")
@@ -116,16 +132,17 @@ class GameScene: SKScene {
         run(SKAction.repeatForever(
             SKAction.sequence([
                 SKAction.run(addMonster),
-                SKAction.wait(forDuration: 2.0) //每隔2秒执行一次
+                SKAction.wait(forDuration: TimeInterval(monsterAddFrequency)) //每隔n秒执行一次
                 ])
-        ))
+        ), withKey: "addMonster")
+        
         
         //增加背景音乐
         let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
         backgroundMusic.autoplayLooped = true
         addChild(backgroundMusic)
         
-        birdStartFly()
+        playerRunGif()
     }
     
     func random() -> CGFloat {
@@ -157,7 +174,7 @@ class GameScene: SKScene {
         addChild(monster)
         
         // Determine speed of the monster
-        let actualDuration = random(min: CGFloat(3.0), max: CGFloat(5.0))
+        let actualDuration = random(min: CGFloat(monsterMoveSpeed), max: CGFloat(monsterMoveSpeed))
         
         // Create the actions
         let actionMove = SKAction.move(to: CGPoint(x: -monster.size.width/2, y: actualY),
@@ -165,8 +182,6 @@ class GameScene: SKScene {
         let actionMoveDone = SKAction.removeFromParent()
     
         //游戏结束时的动作:当怪物离开屏幕时会在场景中显示游戏结束场景
-    
-          print("a：\(self)" )
         // self前加weak,防止循环引用
         let loseAction = SKAction.run() { [weak self] in
             guard let strongSelf = self else { return }
@@ -175,7 +190,6 @@ class GameScene: SKScene {
             //游戏结束
             strongSelf.gameOver()
         }
-        
         //monster.run(SKAction.sequence([actionMove, actionMoveDone]))
         monster.run(SKAction.sequence([actionMove, loseAction, actionMoveDone]))
     }
@@ -245,9 +259,31 @@ class GameScene: SKScene {
         projectile.removeFromParent()
         monster.removeFromParent()
         
+        //游戏难度增加
+        upperGameDifficulty()
+        
         //游戏胜利
         gameWin()
     }
+    
+    //游戏难度增加
+    func upperGameDifficulty(){
+        //分数达到5的倍数时
+        if(monstersDestroyed % 5 == 0){
+            //增加出现频率
+            if(monsterAddFrequency > 0.5){
+                monsterAddFrequency -= 0.3
+                print("monsterAddFrequency: \(monsterAddFrequency)")
+            }
+            
+            //移动速度
+            if(monsterMoveSpeed > 0.5){
+                monsterMoveSpeed -= 0.3
+                print("monsterMoveSpeedz: \(monsterMoveSpeed)")
+            }
+        }
+    }
+    
     
     //游戏结束
     func gameOver(){
@@ -267,7 +303,7 @@ class GameScene: SKScene {
     //游戏胜利
     func gameWin(){
         print("Hit")
-        if monstersDestroyed >= WinOrLose.WIN {
+        if (monstersDestroyed >= WinOrLose.WIN){
             gameStatus = GameStatus.over
             let reveal = SKTransition.flipHorizontal(withDuration: 0.5)
             let gameOverScene = GameOverScene(size: self.size, won: true, status: self.gameStatus)
@@ -322,7 +358,7 @@ extension GameScene: SKPhysicsContactDelegate {
     }
     
     //增加角色的运动效果
-    func birdStartFly() {
+    func playerRunGif() {
         let flyAction = SKAction.animate(with: playerTextures, timePerFrame: 0.12)
         player.run(SKAction.repeatForever(flyAction), withKey: "fly")
     }
