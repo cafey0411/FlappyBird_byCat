@@ -64,6 +64,8 @@ class GameViewController: UIViewController {
             
             if newStatus == GameStatus.over {
                 startBtn.isHidden = false
+                //资源释放
+                scene.deleteView()
             }else{
                 startBtn.isHidden = true
             }
@@ -77,12 +79,13 @@ class GameViewController: UIViewController {
         scene.anchorPoint = CGPoint(x: 0, y: 0)//往右上角方向偏移量
         //SKView：动画和渲染由SKView执行，需要在一个窗口中放置该视图，然后渲染内容。
         let skView = view as! SKView
+        //指画面每秒传输帧数,Frame（画面、帧），p就是Per（每），s就是Second（秒）
         skView.showsFPS = true
         skView.showsNodeCount = true
         skView.ignoresSiblingOrder = true
         scene.scaleMode = .resizeFill
         skView.presentScene(scene)
-    
+        
         scene.startGame()
     }
 }

@@ -50,9 +50,19 @@ extension CGPoint {
 
 //Scenes：场景，游戏中的内容会被组织成场景，由SKScene对象表示。包含了精灵和其它需要渲染的内容。一个游戏，可能需要创建一个或多个SKScene类或其子类。
 class GameScene: SKScene {
+    
+    struct WinOrLose {
+        //失败条件
+        static let LOSE  : Int = 3
+        //胜利条件
+        static let WIN   : Int = 6
+    }
+
     // 1
     //let player = SKSpriteNode(imageNamed: "player")
     
+    //逃掉的怪物数量
+    var monstersPassed = 0
     var monstersDestroyed = 0
     let scoreLabel = SKLabelNode(text: "SCORE:0")
     
@@ -73,7 +83,11 @@ class GameScene: SKScene {
     
  
      func startGame() {
+        //存储数据
+        let score = UserDefaults.standard.integer(forKey: "score")
+        print("score:   \(score)")
         
+        print("start game!")
          gameStatus = GameStatus.running
         
         //增加分数label
@@ -150,15 +164,19 @@ class GameScene: SKScene {
                                        duration: TimeInterval(actualDuration))
         let actionMoveDone = SKAction.removeFromParent()
     
-        //游戏结束时的动作
+        //游戏结束时的动作:当怪物离开屏幕时会在场景中显示游戏结束场景
+    
+          print("a：\(self)" )
+        // self前加weak,防止循环引用
         let loseAction = SKAction.run() { [weak self] in
-            guard let `self` = self else { return }
-            //场景切换动作
-            let reveal = SKTransition.flipHorizontal(withDuration: 0.5)
-            self.gameStatus = GameStatus.over
-            let gameOverScene = GameOverScene(size: self.size, won: false, status: self.gameStatus)
-            self.view?.presentScene(gameOverScene, transition: reveal)
+            guard let strongSelf = self else { return }
+            
+            self?.monstersPassed += 1
+            //游戏结束
+            strongSelf.gameOver()
         }
+        
+        //monster.run(SKAction.sequence([actionMove, actionMoveDone]))
         monster.run(SKAction.sequence([actionMove, loseAction, actionMoveDone]))
     }
     
@@ -222,17 +240,39 @@ class GameScene: SKScene {
         //计数，胜利
         monstersDestroyed += 1
         scoreLabel.text = "SCORE:\(monstersDestroyed)"
-        if monstersDestroyed > 5 {
+
+        //移除击中的
+        projectile.removeFromParent()
+        monster.removeFromParent()
+        
+        //游戏胜利
+        gameWin()
+    }
+    
+    //游戏结束
+    func gameOver(){
+        print("Pass")
+        if(monstersPassed >= WinOrLose.LOSE){
+            //场景切换动作
+            let reveal = SKTransition.flipHorizontal(withDuration: 0.5)
+            self.gameStatus = GameStatus.over
+            //存储数据 (可存数组和字典)
+            print("to save:\(self.monstersDestroyed)")
+            UserDefaults.standard.set(self.monstersDestroyed, forKey: "score")
+            let gameOverScene = GameOverScene(size: self.size, won: false, status: self.gameStatus)
+            self.view?.presentScene(gameOverScene, transition: reveal)
+        }
+    }
+    
+    //游戏胜利
+    func gameWin(){
+        print("Hit")
+        if monstersDestroyed >= WinOrLose.WIN {
             gameStatus = GameStatus.over
             let reveal = SKTransition.flipHorizontal(withDuration: 0.5)
             let gameOverScene = GameOverScene(size: self.size, won: true, status: self.gameStatus)
             view?.presentScene(gameOverScene, transition: reveal)
         }
-        
-        print("Hit")
-        //移除击中的
-        projectile.removeFromParent()
-        monster.removeFromParent()
     }
 }
 
@@ -285,5 +325,10 @@ extension GameScene: SKPhysicsContactDelegate {
     func birdStartFly() {
         let flyAction = SKAction.animate(with: playerTextures, timePerFrame: 0.12)
         player.run(SKAction.repeatForever(flyAction), withKey: "fly")
+    }
+    
+    func deleteView() {
+        self.removeAllActions()
+        self.removeAllChildren()
     }
 }
