@@ -51,7 +51,15 @@ extension CGPoint {
 //Scenes：场景，游戏中的内容会被组织成场景，由SKScene对象表示。包含了精灵和其它需要渲染的内容。一个游戏，可能需要创建一个或多个SKScene类或其子类。
 class GameScene: SKScene {
     
-     var playerClass: Player! =  Player()
+    //主角类
+    var playerClass: Player! =  Player()
+    //主角定义
+    var player: SKSpriteNode!
+    
+    //怪物类
+    var monsterClass: Monster! =  Monster()
+    //怪物定义
+    var monster: SKSpriteNode!
     
     struct WinOrLose {
         //失败条件
@@ -88,9 +96,7 @@ class GameScene: SKScene {
     //得分
     let scoreLabel = SKLabelNode(text: "SCORE:0")
     
-    //主角定义
-    var playerTextures: [SKTexture]!
-    var player: SKSpriteNode!
+
     
     var gameStatus = GameStatus.idle {
         didSet {
@@ -128,7 +134,7 @@ class GameScene: SKScene {
         addChild(scoreLabel)
         
         //主角为gif
-        player = playerClass.initPlayer(x: size.width * 0.1, y: size.height * 0.5)
+        player = playerClass.initPlayer(x: size.width, y: size.height)
         addChild(player)
         
         //重复增加移动的怪物
@@ -148,7 +154,6 @@ class GameScene: SKScene {
     func random() -> CGFloat {
         return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
     }
-    
     func random(min: CGFloat, max: CGFloat) -> CGFloat {
         return random() * (max - min) + min
     }
@@ -156,42 +161,28 @@ class GameScene: SKScene {
     //创建怪物，并移动
     func addMonster() {
         // Create sprite
-        let monster = SKSpriteNode(imageNamed: "monster")
-        
-        // Determine where to spawn the monster along the Y axis
-        let actualY = random(min: monster.size.height/2, max: size.height - monster.size.height/2)
-        
-        // Position the monster slightly off-screen along the right edge,
-        // and along a random position along the Y axis as calculated above
-        monster.position = CGPoint(x: size.width + monster.size.width/2, y: actualY)
-        monster.physicsBody = SKPhysicsBody(rectangleOf: monster.size) // 1
-        monster.physicsBody?.isDynamic = true // 2
-        monster.physicsBody?.categoryBitMask = PhysicsCategory.monster // 3
-        monster.physicsBody?.contactTestBitMask = PhysicsCategory.projectile // 4
-        monster.physicsBody?.collisionBitMask = PhysicsCategory.none // 5
-        
+        monster = monsterClass.initMonster(x: size.width, y: size.height)
         // Add the monster to the scene
         addChild(monster)
         
-        // Determine speed of the monster
-        let actualDuration = random(min: CGFloat(monsterMoveSpeed), max: CGFloat(monsterMoveSpeed))
-        
-        // Create the actions
-        let actionMove = SKAction.move(to: CGPoint(x: -monster.size.width/2, y: actualY),
-                                       duration: TimeInterval(actualDuration))
-        let actionMoveDone = SKAction.removeFromParent()
-    
-        //游戏结束时的动作:当怪物离开屏幕时会在场景中显示游戏结束场景
-        // self前加weak,防止循环引用
-        let loseAction = SKAction.run() { [weak self] in
-            guard let strongSelf = self else { return }
-            
-            self?.monstersPassed += 1
-            //游戏结束
-            strongSelf.gameOver()
-        }
-        //monster.run(SKAction.sequence([actionMove, actionMoveDone]))
-        monster.run(SKAction.sequence([actionMove, loseAction, actionMoveDone]))
+//        // Determine speed of the monster
+//        let actualDuration = random(min: CGFloat(monsterMoveSpeed), max: CGFloat(monsterMoveSpeed))
+//
+//        // Create the actions
+//        let actionMove = SKAction.move(to: CGPoint(x: -monster.size.width/2, y: monsterClass.actualToY),
+//                                       duration: TimeInterval(actualDuration))
+//        let actionMoveDone = SKAction.removeFromParent()
+//
+//        //游戏结束时的动作:当怪物离开屏幕时会在场景中显示游戏结束场景
+//        // self前加weak,防止循环引用
+//        let loseAction = SKAction.run() { [weak self] in
+//            guard let strongSelf = self else { return }
+//
+//            self!.monsterClass.AddmonstersPassed()
+//            //游戏结束
+//            strongSelf.gameOver()
+//        }
+//        monster.run(SKAction.sequence([actionMove, loseAction, actionMoveDone]))
     }
     
     //每一贞动画执行一次
@@ -206,13 +197,19 @@ class GameScene: SKScene {
         }
         tempNum = tempNum + 1;
         
-        if(monstersPassed == 1){
+        if(monsterClass.monstersPassed == 1){
             projectileSize = 2
         }
         
-        if(monstersPassed == 2){
+        if(monsterClass.monstersPassed == 2){
             DoubleShoot = true
         }
+        
+        //游戏结束
+         if(monsterClass.monstersPassed >= WinOrLose.LOSE){
+            gameOver()
+        }
+        
     }
     
     //点击画面时：创建飞镖，并发射 ：重写默认方法
@@ -331,7 +328,6 @@ class GameScene: SKScene {
     //游戏结束
     func gameOver(){
         print("Pass")
-        if(monstersPassed >= WinOrLose.LOSE){
             //场景切换动作
             let reveal = SKTransition.flipHorizontal(withDuration: 0.5)
             self.gameStatus = GameStatus.over
@@ -340,7 +336,6 @@ class GameScene: SKScene {
             UserDefaults.standard.set(self.monstersDestroyed, forKey: "score")
             let gameOverScene = GameOverScene(size: self.size, won: false, status: self.gameStatus)
             self.view?.presentScene(gameOverScene, transition: reveal)
-        }
     }
     
     //游戏胜利
@@ -380,25 +375,6 @@ extension GameScene: SKPhysicsContactDelegate {
             }
         }
     }
-    
-    //因为无法直接将gif动画在SpriteKit中播放，所以我们必须将gif中的一系列静态图片抽取出来然后形成一个动画帧
-    func loadTextures(imagePath: String) -> [SKTexture]?{
-        
-        guard let imageSource = CGImageSourceCreateWithURL(URL(fileURLWithPath: imagePath) as CFURL, nil) else {
-            return nil
-        }
-        
-        let count = CGImageSourceGetCount(imageSource)
-        var images:[CGImage] = []
-        
-        for i in 0..<count{
-            guard let img = CGImageSourceCreateImageAtIndex(imageSource, i, nil) else {continue}
-            images.append(img)
-        }
-        return images.map {SKTexture(cgImage:$0)}
-    }
-    
-
     
     func deleteView() {
         self.removeAllActions()

@@ -22,7 +22,7 @@ class Player {
         //主角为gif
         playerTextures = loadTextures(imagePath: Bundle.main.path(forResource: "player", ofType: "gif")!)
         player = SKSpriteNode(texture: playerTextures[0])
-        player.position = CGPoint(x: x, y: y)
+        player.position = CGPoint(x: x * 0.1, y: y * 0.5)
         
         //颜色动画
         let pulseRed = SKAction.sequence([SKAction.colorize(with: SKColor.red, colorBlendFactor: 0.5, duration: 0.2),

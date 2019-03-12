@@ -20,6 +20,7 @@
 		BA02892D22278E46005E796C /* pew-pew-lei.caf in Resources */ = {isa = PBXBuildFile; fileRef = BA02892B22278E46005E796C /* pew-pew-lei.caf */; };
 		BA02893E22292338005E796C /* player.gif in Resources */ = {isa = PBXBuildFile; fileRef = BA02893D22292338005E796C /* player.gif */; };
 		BA101CEF22379B5C0054D2BA /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA101CEE22379B5C0054D2BA /* Player.swift */; };
+		BA101CF12237AB020054D2BA /* Monster.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA101CF02237AB020054D2BA /* Monster.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +60,7 @@
 		BA02892B22278E46005E796C /* pew-pew-lei.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "pew-pew-lei.caf"; sourceTree = "<group>"; };
 		BA02893D22292338005E796C /* player.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = player.gif; path = FlappyBird_byCat/Resources/player.gif; sourceTree = SOURCE_ROOT; };
 		BA101CEE22379B5C0054D2BA /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		BA101CF02237AB020054D2BA /* Monster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Monster.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +116,7 @@
 				BA0288AF22262E19005E796C /* AppDelegate.swift */,
 				BA0288B522262E19005E796C /* GameScene.swift */,
 				BA101CEE22379B5C0054D2BA /* Player.swift */,
+				BA101CF02237AB020054D2BA /* Monster.swift */,
 				BA0288B722262E19005E796C /* GameViewController.swift */,
 				BA0288B922262E19005E796C /* Main.storyboard */,
 				BA0288BC22262E1A005E796C /* Assets.xcassets */,
@@ -297,6 +300,7 @@
 				BA0288B822262E19005E796C /* GameViewController.swift in Sources */,
 				BA02892822278BCC005E796C /* GameOverScene.swift in Sources */,
 				BA101CEF22379B5C0054D2BA /* Player.swift in Sources */,
+				BA101CF12237AB020054D2BA /* Monster.swift in Sources */,
 				BA0288B022262E19005E796C /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
