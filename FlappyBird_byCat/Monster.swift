@@ -14,6 +14,9 @@ class Monster {
     
     var monster: SKSpriteNode!
     
+    //出现频率
+    var monsterAddFrequency : Double = 2
+    
     //从右到左移动所需时间
     var monsterMoveSpeed : Double = 5
     
@@ -59,13 +62,12 @@ class Monster {
         let loseAction = SKAction.run() { [weak self] in
             guard self != nil else { return }
             
-            self!.AddmonstersPassed()
+            self!.addMonstersPassed()
         }
         monster.run(SKAction.sequence([actionMove, loseAction, actionMoveDone]))
         
         return monster;
     }
-    
     
     //获取随机位置
     func random(min: CGFloat, max: CGFloat) -> CGFloat {
@@ -73,9 +75,26 @@ class Monster {
         return randomA4 * (max - min) + min
     }
     
-    //增加
-    func AddmonstersPassed() -> Int {
+    //怪物逃跑计数
+    func addMonstersPassed() -> Int {
         monstersPassed = monstersPassed + 1
         return monstersPassed
+    }
+    
+    //减少移动时间
+    func subMonsterMoveSpeed() {
+        if(monsterMoveSpeed > 0.5){
+            monsterMoveSpeed -= 0.3
+            print("monsterMoveSpeed: \(monsterMoveSpeed)")
+        }
+    }
+    
+    //增加出现频率
+    func addMonsterFrequency() {
+        if(monsterAddFrequency > 0.5){
+            monsterAddFrequency -= 0.3
+            monsterAddFrequency -= 0.1
+            print("monsterAddFrequency: \(monsterAddFrequency)")
+        }
     }
 }

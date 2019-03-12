@@ -74,29 +74,24 @@ class GameScene: SKScene {
 
     //怪物参数u初始化
     //出现频率
-    var monsterAddFrequency : Double = 2 {
+    var monsterAddFrequencyTmp : Double = 2 {
         didSet {
-            print("restart :monsterAddFrequency:\(monsterAddFrequency)")
+            //
+            print("restart :monsterAddFrequency:\(monsterClass.monsterAddFrequency)")
             removeAction(forKey: "addMonster")
             run(SKAction.repeatForever(
                 SKAction.sequence([
                     SKAction.run(addMonster),
-                    SKAction.wait(forDuration: TimeInterval(monsterAddFrequency)) //每隔n秒执行一次
+                    SKAction.wait(forDuration: TimeInterval(monsterClass.monsterAddFrequency)) //每隔n秒执行一次
                     ])
             ), withKey: "addMonster")
         }
     }
-    //从右到左移动所需时间
-    var monsterMoveSpeed : Double = 5
-
-    //逃掉的怪物数量
-    var monstersPassed = 0
+    
     //击中c怪物数量
     var monstersDestroyed = 0
     //得分
     let scoreLabel = SKLabelNode(text: "SCORE:0")
-    
-
     
     var gameStatus = GameStatus.idle {
         didSet {
@@ -141,7 +136,7 @@ class GameScene: SKScene {
         run(SKAction.repeatForever(
             SKAction.sequence([
                 SKAction.run(addMonster),
-                SKAction.wait(forDuration: TimeInterval(monsterAddFrequency)) //每隔n秒执行一次
+                SKAction.wait(forDuration: TimeInterval(monsterClass.monsterAddFrequency)) //每隔n秒执行一次
                 ])
         ), withKey: "addMonster")
         
@@ -151,38 +146,12 @@ class GameScene: SKScene {
 //        addChild(backgroundMusic)
     }
     
-    func random() -> CGFloat {
-        return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
-    }
-    func random(min: CGFloat, max: CGFloat) -> CGFloat {
-        return random() * (max - min) + min
-    }
-    
     //创建怪物，并移动
     func addMonster() {
         // Create sprite
         monster = monsterClass.initMonster(x: size.width, y: size.height)
         // Add the monster to the scene
         addChild(monster)
-        
-//        // Determine speed of the monster
-//        let actualDuration = random(min: CGFloat(monsterMoveSpeed), max: CGFloat(monsterMoveSpeed))
-//
-//        // Create the actions
-//        let actionMove = SKAction.move(to: CGPoint(x: -monster.size.width/2, y: monsterClass.actualToY),
-//                                       duration: TimeInterval(actualDuration))
-//        let actionMoveDone = SKAction.removeFromParent()
-//
-//        //游戏结束时的动作:当怪物离开屏幕时会在场景中显示游戏结束场景
-//        // self前加weak,防止循环引用
-//        let loseAction = SKAction.run() { [weak self] in
-//            guard let strongSelf = self else { return }
-//
-//            self!.monsterClass.AddmonstersPassed()
-//            //游戏结束
-//            strongSelf.gameOver()
-//        }
-//        monster.run(SKAction.sequence([actionMove, loseAction, actionMoveDone]))
     }
     
     //每一贞动画执行一次
@@ -209,7 +178,6 @@ class GameScene: SKScene {
          if(monsterClass.monstersPassed >= WinOrLose.LOSE){
             gameOver()
         }
-        
     }
     
     //点击画面时：创建飞镖，并发射 ：重写默认方法
@@ -311,17 +279,12 @@ class GameScene: SKScene {
     func upperGameDifficulty(){
         //分数达到5的倍数时
         if(monstersDestroyed % 5 == 0){
-            //增加出现频率
-            if(monsterAddFrequency > 0.5){
-                monsterAddFrequency -= 0.3
-                print("monsterAddFrequency: \(monsterAddFrequency)")
-            }
+            //增加出现频率 : monsterAddFrequencyTmp调用
+           monsterAddFrequencyTmp = monsterClass.monsterAddFrequency
+           monsterClass.addMonsterFrequency()
             
             //移动速度
-            if(monsterMoveSpeed > 0.5){
-                monsterMoveSpeed -= 0.3
-                print("monsterMoveSpeed: \(monsterMoveSpeed)")
-            }
+           monsterClass.subMonsterMoveSpeed()
         }
     }
     
