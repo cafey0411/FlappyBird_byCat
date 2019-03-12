@@ -51,6 +51,8 @@ extension CGPoint {
 //Scenes：场景，游戏中的内容会被组织成场景，由SKScene对象表示。包含了精灵和其它需要渲染的内容。一个游戏，可能需要创建一个或多个SKScene类或其子类。
 class GameScene: SKScene {
     
+     var playerClass: Player! =  Player()
+    
     struct WinOrLose {
         //失败条件
         static let LOSE  : Int = 3
@@ -58,12 +60,10 @@ class GameScene: SKScene {
         static let WIN   : Int = 60
     }
     
-    
     //子弹参数
     var projectileSize : CGFloat = 1
     var DoubleShoot : Bool = false
 
-    
     //怪物参数u初始化
     //出现频率
     var monsterAddFrequency : Double = 2 {
@@ -81,14 +81,14 @@ class GameScene: SKScene {
     //从右到左移动所需时间
     var monsterMoveSpeed : Double = 5
 
-    // 1
-    //let player = SKSpriteNode(imageNamed: "player")
-    
     //逃掉的怪物数量
     var monstersPassed = 0
+    //击中c怪物数量
     var monstersDestroyed = 0
+    //得分
     let scoreLabel = SKLabelNode(text: "SCORE:0")
     
+    //主角定义
     var playerTextures: [SKTexture]!
     var player: SKSpriteNode!
     
@@ -102,6 +102,13 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         //背景颜色
         backgroundColor = SKColor(red: 80.0/255, green: 192.0/255, blue: 203.0/255, alpha: 0.3)
+        physicsWorld.gravity = CGVector(dx: 0.0, dy: 0.0)
+        
+        /*
+         SKPhysicsWorld，这个类基于场景，只能被修改但是不能被创建，这个类负责提供重力和检查碰撞
+         设置物理世界的碰撞检测代理为场景自己，这样如果这个物理世界里面有两个可以碰撞接触的物理体碰到一起了就会通知他的代理
+         */
+        physicsWorld.contactDelegate = self
     }
     
      func startGame() {
@@ -121,24 +128,8 @@ class GameScene: SKScene {
         addChild(scoreLabel)
         
         //主角为gif
-        playerTextures = loadTextures(imagePath: Bundle.main.path(forResource: "player", ofType: "gif")!)
-        player = SKSpriteNode(texture: playerTextures[0])
-        player.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
+        player = playerClass.initPlayer(x: size.width * 0.1, y: size.height * 0.5)
         addChild(player)
-        
-        //颜色动画
-        let pulseRed = SKAction.sequence([SKAction.colorize(with: SKColor.red, colorBlendFactor: 0.5, duration: 0.2),
-                                          SKAction.wait(forDuration: 0.1),
-                                          SKAction.colorize(withColorBlendFactor: 0, duration: 0.1)])
-        player.run(SKAction.repeatForever(pulseRed))
-        
-        physicsWorld.gravity = CGVector(dx: 0.0, dy: 0.0)
-        
-        /*
-         SKPhysicsWorld，这个类基于场景，只能被修改但是不能被创建，这个类负责提供重力和检查碰撞
-         设置物理世界的碰撞检测代理为场景自己，这样如果这个物理世界里面有两个可以碰撞接触的物理体碰到一起了就会通知他的代理
-         */
-        physicsWorld.contactDelegate = self
         
         //重复增加移动的怪物
         run(SKAction.repeatForever(
@@ -148,13 +139,10 @@ class GameScene: SKScene {
                 ])
         ), withKey: "addMonster")
         
-        
         //增加背景音乐
-        let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
-        backgroundMusic.autoplayLooped = true
-        addChild(backgroundMusic)
-        
-        playerRunGif()
+//        let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
+//        backgroundMusic.autoplayLooped = true
+//        addChild(backgroundMusic)
     }
     
     func random() -> CGFloat {
@@ -218,11 +206,11 @@ class GameScene: SKScene {
         }
         tempNum = tempNum + 1;
         
-        if(monstersPassed == 2){
+        if(monstersPassed == 1){
             projectileSize = 2
         }
         
-        if(monstersPassed == 1){
+        if(monstersPassed == 2){
             DoubleShoot = true
         }
     }
@@ -239,11 +227,10 @@ class GameScene: SKScene {
        // begianShoot(touch)
         let t_x = touch.location(in: self).x
         let t_y = touch.location(in: self).y
-        var touch2: CGPoint = CGPoint(x:t_x,y:t_y)
-        begianShoot2(touch2)
+        let touch2: CGPoint = CGPoint(x:t_x,y:t_y)
+        begianShoot(touch2)
         
-   
-        //增加又向
+        //增加双向
         if(DoubleShoot){
             var t_y2 : CGFloat
             if (t_y >= 333.5){
@@ -252,73 +239,14 @@ class GameScene: SKScene {
                 t_y2 = 333.5 + ( 333.5 - t_y)
             }
             let touch3: CGPoint = CGPoint(x:t_x,y: t_y2)
-            begianShoot2(touch3)
+            begianShoot(touch3)
         }
     }
     
-    func begianShoot(_ touch: UITouch){
-    
+    //发射子弹
+    func begianShoot(_ touch: CGPoint){
         //发射效果音乐
-        run(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
-        
-        let touchLocation = touch.location(in: self)
-        
-        // 2 - Set up initial location of projectile
-        let projectile = SKSpriteNode(imageNamed: "projectile")
-        
-        //子弹大小
-        projectile.xScale = projectileSize
-        projectile.yScale = projectileSize
-        projectile.position = player.position
-        
-        //物理引擎:碰撞定义
-        projectile.physicsBody?.affectedByGravity = true
-        projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width / 2)
-        //定义了这个物体所属分类
-        projectile.physicsBody?.categoryBitMask = PhysicsCategory.projectile
-        //定义了哪种物体接触到该物体，该物体会收到通知（谁撞我我会收到通知）
-        projectile.physicsBody?.contactTestBitMask = PhysicsCategory.monster
-        //定义了哪种物体会碰撞到自己
-        projectile.physicsBody?.collisionBitMask = PhysicsCategory.none
-        projectile.physicsBody?.usesPreciseCollisionDetection = true
-        
-        // 3 - Determine offset of location to projectile
-        let offset = touchLocation - projectile.position
-        
-        // 4 - Bail out if you are shooting down or backwards
-        if offset.x < 0 { return }
-        
-        // 5 - OK to add now - you've double checked position
-        addChild(projectile)
-        
-        // 6 - Get the direction of where to shoot
-        let direction = offset.normalized()
-        
-        // 7 - Make it shoot far enough to be guaranteed off screen
-        let shootAmount = direction * 1000
-        
-        // 8 - Add the shoot amount to the current position
-        let realDest = shootAmount + projectile.position
-        
-        //定义第分散子弹
-        var direction2 = direction
-        direction2.y = -direction.y
-        let shootAmount2 = direction2 * 1000
-        let realDest2 = shootAmount2 + projectile.position
-        let actionMove2 = SKAction.move(to: realDest2, duration: 2.0)
-        
-        // 9 - Create the actions:要移动的目标坐标点
-        let actionMove = SKAction.move(to: realDest, duration: 2.0)
-        let actionMoveDone = SKAction.removeFromParent()
-        projectile.run(SKAction.sequence([actionMove, actionMoveDone]))
-        projectile.run(SKAction.sequence([actionMove2, actionMoveDone]))
-    }
-    
-    
-    func begianShoot2(_ touch: CGPoint){
-        
-        //发射效果音乐
-        run(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
+        //run(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
         
         let touchLocation = touch
         
@@ -465,18 +393,12 @@ extension GameScene: SKPhysicsContactDelegate {
         
         for i in 0..<count{
             guard let img = CGImageSourceCreateImageAtIndex(imageSource, i, nil) else {continue}
-            
             images.append(img)
         }
-        
         return images.map {SKTexture(cgImage:$0)}
     }
     
-    //增加角色的运动效果
-    func playerRunGif() {
-        let flyAction = SKAction.animate(with: playerTextures, timePerFrame: 0.12)
-        player.run(SKAction.repeatForever(flyAction), withKey: "fly")
-    }
+
     
     func deleteView() {
         self.removeAllActions()
