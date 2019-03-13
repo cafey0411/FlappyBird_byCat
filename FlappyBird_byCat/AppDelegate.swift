@@ -16,6 +16,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        //程序入口改：方便测试
+//        let vc = TimeTest()
+//        self.window?.rootViewController = vc
+        
+        
         return true
     }
 

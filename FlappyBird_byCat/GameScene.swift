@@ -64,6 +64,8 @@ class GameScene: SKScene {
     //子弹类
     var projectileClass: Projectile! =  Projectile()
     
+    let eventTimer = EventTimer()
+    
     struct WinOrLose {
         //失败条件
         static let LOSE  : Int = 3
@@ -72,7 +74,7 @@ class GameScene: SKScene {
     }
     
     //怪物参数u初始化
-    //出现频率
+    //出现频率TEMP
     var monsterAddFrequencyTmp : Double = 2 {
         didSet {
             //
@@ -156,6 +158,11 @@ class GameScene: SKScene {
     //每一贞动画执行一次
     var sec : Int = 0 ;
     var tempNum: Int  = 0;
+    
+    //变大flag
+    var sizeChangedFlag :Bool = true
+    //变双flag
+    var doubleChangedFlag :Bool = true
     override func update(_ currentTime: TimeInterval) {
         if (tempNum > 60 )
         {
@@ -165,12 +172,26 @@ class GameScene: SKScene {
         }
         tempNum = tempNum + 1;
         
-        if(monsterClass.monstersPassed == 1){
-            projectileClass.projectileSize = 2
+       //子弹效果1：变大1倍
+        if(monsterClass.monstersPassed == 1 && sizeChangedFlag){
+            sizeChangedFlag = false
+            
+            projectileClass.projectileSize += 1
+            //持续时间5秒
+            eventTimer.DispatchAfter(after: 5) {
+                self.projectileClass.projectileSize -= 1
+            }
         }
         
-        if(monsterClass.monstersPassed == 2){
+        //子弹效果：双向
+        if(monsterClass.monstersPassed == 2 && doubleChangedFlag){
+            doubleChangedFlag = false
+            
             projectileClass.doubleShoot = true
+            //持续时间8秒
+            eventTimer.DispatchAfter(after: 8) {
+                self.projectileClass.doubleShoot = false
+            }
         }
         
         //游戏结束
@@ -198,7 +219,7 @@ class GameScene: SKScene {
         if(projectileClass.doubleShoot){
             let midY : CGFloat = player.position.y
             let t_y2 : CGFloat = midY * 2 - t_y
-            let touch3: CGPoint = CGPoint(x:t_x,y: t_y2)
+            let touch3: CGPoint = CGPoint(x : t_x , y : t_y2)
             begianShoot(touch3)
         }
     }
@@ -275,7 +296,6 @@ class GameScene: SKScene {
         }
     }
 }
-
 
 //添加场景代理
 extension GameScene: SKPhysicsContactDelegate {
