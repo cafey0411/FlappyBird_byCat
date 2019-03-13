@@ -48,7 +48,6 @@ class Monster {
         monster.physicsBody?.contactTestBitMask = PhysicsCategory.projectile // 4
         monster.physicsBody?.collisionBitMask = PhysicsCategory.none // 5
     
-        
         // Determine speed of the monster
         let actualDuration = random(min: CGFloat(monsterMoveSpeed), max: CGFloat(monsterMoveSpeed))
         
@@ -93,7 +92,6 @@ class Monster {
     func addMonsterFrequency() {
         if(monsterAddFrequency > 0.5){
             monsterAddFrequency -= 0.3
-            monsterAddFrequency -= 0.1
             print("monsterAddFrequency: \(monsterAddFrequency)")
         }
     }

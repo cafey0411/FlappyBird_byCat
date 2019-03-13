@@ -61,6 +61,9 @@ class GameScene: SKScene {
     //怪物定义
     var monster: SKSpriteNode!
     
+    //子弹类
+    var projectileClass: Projectile! =  Projectile()
+    
     struct WinOrLose {
         //失败条件
         static let LOSE  : Int = 3
@@ -68,10 +71,6 @@ class GameScene: SKScene {
         static let WIN   : Int = 60
     }
     
-    //子弹参数
-    var projectileSize : CGFloat = 1
-    var DoubleShoot : Bool = false
-
     //怪物参数u初始化
     //出现频率
     var monsterAddFrequencyTmp : Double = 2 {
@@ -118,7 +117,7 @@ class GameScene: SKScene {
         print("score:   \(score)")
         
         print("start game!")
-         gameStatus = GameStatus.running
+        gameStatus = GameStatus.running
         
         //增加分数label
         scoreLabel.position = CGPoint(x: size.width * 0.5, y: size.height - 50)
@@ -167,11 +166,11 @@ class GameScene: SKScene {
         tempNum = tempNum + 1;
         
         if(monsterClass.monstersPassed == 1){
-            projectileSize = 2
+            projectileClass.projectileSize = 2
         }
         
         if(monsterClass.monstersPassed == 2){
-            DoubleShoot = true
+            projectileClass.doubleShoot = true
         }
         
         //游戏结束
@@ -189,73 +188,36 @@ class GameScene: SKScene {
         guard let touch = touches.first else {
             return
         }
-       // begianShoot(touch)
+        
         let t_x = touch.location(in: self).x
         let t_y = touch.location(in: self).y
         let touch2: CGPoint = CGPoint(x:t_x,y:t_y)
         begianShoot(touch2)
         
         //增加双向
-        if(DoubleShoot){
-            var t_y2 : CGFloat
-            if (t_y >= 333.5){
-                t_y2 = 333.5 - ( t_y - 333.5)
-            }else{
-                t_y2 = 333.5 + ( 333.5 - t_y)
-            }
+        if(projectileClass.doubleShoot){
+            let midY : CGFloat = player.position.y
+            let t_y2 : CGFloat = midY * 2 - t_y
             let touch3: CGPoint = CGPoint(x:t_x,y: t_y2)
             begianShoot(touch3)
         }
     }
     
     //发射子弹
-    func begianShoot(_ touch: CGPoint){
+    func begianShoot(_ touchLocation: CGPoint){
         //发射效果音乐
         //run(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
-        
-        let touchLocation = touch
-        
-        // 2 - Set up initial location of projectile
-        let projectile = SKSpriteNode(imageNamed: "projectile")
-        
-        //子弹大小
-        projectile.xScale = projectileSize
-        projectile.yScale = projectileSize
-        projectile.position = player.position
-        
-        //物理引擎:碰撞定义
-        projectile.physicsBody?.affectedByGravity = true
-        projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width / 2)
-        //定义了这个物体所属分类
-        projectile.physicsBody?.categoryBitMask = PhysicsCategory.projectile
-        //定义了哪种物体接触到该物体，该物体会收到通知（谁撞我我会收到通知）
-        projectile.physicsBody?.contactTestBitMask = PhysicsCategory.monster
-        //定义了哪种物体会碰撞到自己
-        projectile.physicsBody?.collisionBitMask = PhysicsCategory.none
-        projectile.physicsBody?.usesPreciseCollisionDetection = true
-        
+
         // 3 - Determine offset of location to projectile
-        let offset = touchLocation - projectile.position
-        
+        let offset = touchLocation - player.position
         // 4 - Bail out if you are shooting down or backwards
         if offset.x < 0 { return }
         
+        // 2 - Set up initial location of projectile
+        let projectile : SKSpriteNode! = projectileClass.initProjectile(player: player!, touchLocation)
+        
         // 5 - OK to add now - you've double checked position
         addChild(projectile)
-        
-        // 6 - Get the direction of where to shoot
-        let direction = offset.normalized()
-        
-        // 7 - Make it shoot far enough to be guaranteed off screen
-        let shootAmount = direction * 1000
-        
-        // 8 - Add the shoot amount to the current position
-        let realDest = shootAmount + projectile.position
-    
-        // 9 - Create the actions:要移动的目标坐标点
-        let actionMove = SKAction.move(to: realDest, duration: 2.0)
-        let actionMoveDone = SKAction.removeFromParent()
-        projectile.run(SKAction.sequence([actionMove, actionMoveDone]))
     }
     
     //击中时
@@ -297,6 +259,7 @@ class GameScene: SKScene {
             //存储数据 (可存数组和字典)
             print("to save:\(self.monstersDestroyed)")
             UserDefaults.standard.set(self.monstersDestroyed, forKey: "score")
+        
             let gameOverScene = GameOverScene(size: self.size, won: false, status: self.gameStatus)
             self.view?.presentScene(gameOverScene, transition: reveal)
     }
